@@ -1,0 +1,4 @@
+#ifndef PATHGEN_PATHGEN_H
+#define PATHGEN_PATHGEN_H
+${PATHGEN_INCLUDES}
+#endif
