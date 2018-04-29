@@ -77,12 +77,13 @@ void IMUGenerator::SaveMeasurementFiles(const ImuMeasurementDeque& meas){
     std::ofstream imu_gyro("gyro.txt", std::ios_base::trunc);
     std::ofstream imu_ts("timestamp.txt", std::ios_base::trunc);
     for(const auto& m : meas){
-        imu_file << m.timestamp << ", " << m.measurement.accelerometers[0] <<
-                    "," <<  m.measurement.accelerometers[1] << ", " <<
-                    m.measurement.accelerometers[2]
-                 << ", " << m.measurement.gyroscopes[0] << ", "
-                 << m.measurement.gyroscopes[1] << ", "
-                 << m.measurement.gyroscopes[2] << std::endl;
+        imu_file << static_cast<uint64_t>(1e9*m.timestamp) << ", " <<
+          m.measurement.accelerometers[0] << "," <<
+          m.measurement.accelerometers[1] << ", " <<
+          m.measurement.accelerometers[2] << ", " <<
+          m.measurement.gyroscopes[0] << ", " <<
+          m.measurement.gyroscopes[1] << ", " <<
+          m.measurement.gyroscopes[2] << std::endl;
 
         // measurement files for reading in with HAL
         imu_accel << m.measurement.accelerometers[0] << "," <<
