@@ -10,7 +10,7 @@ void IMUGenerator::GenerateInertialMeasurements(
         std::vector<PosePtr>* imu_poses)
 {
     // generate the imu measurements that correspond to the given trajectory
-    int NUM_MEASUREMENTS = (int)path_options.duration*imu_parameters.rate;
+    int NUM_MEASUREMENTS = (int)(path_options.duration*imu_parameters.rate);
     double spline_increment = 1.0/NUM_MEASUREMENTS; // how many pieces to divide the spline into (spline goes from t: 0->1)
     double spline_pos = 0.0; // initial spline position, t=0;
     const double DT = 1.0/double(imu_parameters.rate);

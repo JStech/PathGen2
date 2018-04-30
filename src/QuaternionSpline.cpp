@@ -115,7 +115,7 @@ QuaternionSpline::QuaternionSpline(Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dy
     support_pts_(support)
 {
     // build the chord lengths
-   QuaterionSplineFitting::ChordLengths(ctrl, knots_);
+   QuaternionSplineFitting::ChordLengths(ctrl, knots_);
 }
 
 
@@ -373,7 +373,7 @@ Eigen::Vector3d QuaternionSpline::derivative(const double& u) const
 
 
 // inspired by eigen's spline interpolation class (static)
-QuaternionSpline QuaterionSplineFitting::Interpolate(const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> pts)
+QuaternionSpline QuaternionSplineFitting::Interpolate(const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> pts)
 {
 
     Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> support_pts(pts.cols());
@@ -406,7 +406,7 @@ QuaternionSpline QuaterionSplineFitting::Interpolate(const Eigen::Array<Eigen::Q
 }
 
 // inspired by eigen's spline interpolation class
-void QuaterionSplineFitting::ChordLengths(const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic>& pts,
+void QuaternionSplineFitting::ChordLengths(const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic>& pts,
                                           Eigen::VectorXd& chord_lengths)
 {
     const int n = pts.cols();

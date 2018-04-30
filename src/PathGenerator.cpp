@@ -80,21 +80,19 @@ PoseSpline PathGenerator::GenerateSplineFromPoses(std::vector<PosePtr> poses,
     // run a cubic spline through the position (for generating imu info)
     Eigen::ArrayXXd positions(3, poses.size());
     Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> rotations(poses.size());
-    Eigen::ArrayXXd euler(3, poses.size());
     for(size_t ii = 0; ii < poses.size(); ++ii){
         positions.col(ii) = poses.at(ii)->translation(); // translation (x, y, x)
 
         rotations(ii) = poses.at(ii)->unit_quaternion(); // quaternion (i, j, k, w), eigen ordering
-        euler.col(ii) = R2pqr(poses.at(ii)->rotationMatrix());
     }
 
     // do the quaternion interpolation
     Eigen::VectorXd quat_chord_lengths;
     quat_chord_lengths.setZero();
-    QuaterionSplineFitting::ChordLengths(rotations, quat_chord_lengths);
+    QuaternionSplineFitting::ChordLengths(rotations, quat_chord_lengths);
 
     QuaternionSpline quat_spline =
-            QuaterionSplineFitting::Interpolate(rotations);
+            QuaternionSplineFitting::Interpolate(rotations);
 
     // integrate derivative back so that curves are consistent
     quat_spline.SetIntegrateDerivativeForOrientation(integrate_gyro);

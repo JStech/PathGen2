@@ -47,7 +47,7 @@ protected:
     double eps_ = 1e-3;
 };
 
-struct QuaterionSplineFitting
+struct QuaternionSplineFitting
 {
     static void ChordLengths(
             const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic>& pts,
