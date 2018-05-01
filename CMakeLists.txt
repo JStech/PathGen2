@@ -38,6 +38,7 @@ endif()
 ###############################################################################
 # Set up options
 option(BUILD_APPLICATIONS "Build Applications" ON)
+option(BUILD_TESTS "Build Tests" ON)
 SET(N_CORES 8 CACHE STRING "Using N number of cores for parallel build")
 
 
@@ -129,4 +130,10 @@ if(BUILD_APPLICATIONS)
   MESSAGE(STATUS "BUILDING APPLICATIONS")
   set( PathGen_DIR ${CMAKE_CURRENT_BINARY_DIR} )
   add_subdirectory(applications)
+endif()
+
+if(BUILD_TESTS)
+  MESSAGE(STATUS "BUILDING TESTS")
+  set( PathGen_DIR ${CMAKE_CURRENT_BINARY_DIR} )
+  add_subdirectory(tests)
 endif()

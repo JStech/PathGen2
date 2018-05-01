@@ -1,6 +1,7 @@
-find_package(PathGen 0.1 REQUIRED)
+find_package(Gflags REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Compass REQUIRED)
-find_package (Eigen3 REQUIRED)
+find_package(PathGen 0.1 REQUIRED)
 
 include_directories(
     ${PathGen_INCLUDE_DIRS}

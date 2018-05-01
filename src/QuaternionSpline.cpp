@@ -79,9 +79,10 @@ Eigen::Vector3d omega(const Eigen::Quaterniond& q, const Eigen::Quaterniond& q_d
             if(!solution_exists) {
                 std::cerr << "QR solution failed." << std::endl;
                 std::cerr <<
-                  q.w() << " " << q.x() << " " << q.y() << " " << q.z() << ", " <<
-                  q_dot.w() << " " << q_dot.x() << " " << q_dot.y() << " " << q_dot.z() << ", " <<
-                  std::endl << A << std::endl << B << std::endl << w;
+                  q.w() << " " << q.x() << " " << q.y() << " " << q.z() <<
+                  std::endl << q_dot.w() << " " << q_dot.x() << " " << q_dot.y()
+                  << " " << q_dot.z() << std::endl << std::endl <<
+                  A << std::endl << B << std::endl << w;
             }
         }
         else
