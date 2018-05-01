@@ -1,6 +1,8 @@
 #include <pathgen/QuaternionSpline.h>
 #include <pathgen/Utils.h>
 #include <pathgen/QuaternionAddons.h>
+#include <glog/logging.h>
+#include <iomanip>
 
 namespace pathgen
 {
@@ -74,8 +76,13 @@ Eigen::Vector3d omega(const Eigen::Quaterniond& q, const Eigen::Quaterniond& q_d
         {
             w = A.colPivHouseholderQr().solve(B);
             bool solution_exists = (A*w).isApprox(B, 1e-5);
-            if(!solution_exists)
+            if(!solution_exists) {
                 std::cerr << "QR solution failed." << std::endl;
+                std::cerr <<
+                  q.w() << " " << q.x() << " " << q.y() << " " << q.z() << ", " <<
+                  q_dot.w() << " " << q_dot.x() << " " << q_dot.y() << " " << q_dot.z() << ", " <<
+                  std::endl << A << std::endl << B << std::endl << w;
+            }
         }
         else
             w.setZero();
@@ -138,7 +145,7 @@ void QuaternionSpline::SetIntegrateDerivativeForOrientation(bool integrate){
             integrated_quaternions_.push_back(euler2quat(euler));
         }
 
-        std::cout << "integrated quaternion and generated" << integrated_quaternions_.size() << " elements" << std::endl;
+        std::cout << "integrated quaternion and generated " << integrated_quaternions_.size() << " elements" << std::endl;
 
     }
     integrate_derivative_for_orientation_ = integrate;
@@ -260,8 +267,6 @@ Eigen::Quaterniond QuaternionSpline::quaternionDerivative(const double& u) const
     quat_dot.coeffs() = coeffs;
 
     return quat_dot;
-
-
 }
 
 
@@ -291,7 +296,6 @@ Eigen::Vector3d QuaternionSpline::derivative(const double& u) const
     Eigen::Quaterniond quat_dot;
     Eigen::Quaterniond quat;
 
-
     //    if(index == 1 || index == knots_.size()-1 ){
     //        // we're between the first and second keyframe...do slerp since squad
     //        // needs more points
@@ -306,6 +310,14 @@ Eigen::Vector3d QuaternionSpline::derivative(const double& u) const
 
     squad(q, q_plus_1, s, s_plus_1, t, &quat); // get the interpolated quaternion
     squad_prime(q, q_plus_1, s, s_plus_1, t, &quat_dot); // and it's derivative w.r.t. t
+
+    // LOG(INFO) << std::fixed << std::setprecision(8) << u << " " <<
+    //   q.w() << " " << q.x() << " " << q.y() << " " << q.z() << ", " <<
+    //   q_plus_1.w() << " " << q_plus_1.x() << " " << q_plus_1.y() << " " << q_plus_1.z() << ", " <<
+    //   s.w() << " " << s.x() << " " << s.y() << " " << s.z() << ", " <<
+    //   s_plus_1.w() << " " << s_plus_1.x() << " " << s_plus_1.y() << " " << s_plus_1.z() << ", " <<
+    //   quat_dot.w() << " " << quat_dot.x() << " " << quat_dot.y() << " " << quat_dot.z() << ", " <<
+    //   quat.w() << " " << quat.x() << " " << quat.y() << " " << quat.z();
 
     TESTsquad_prime(q, q_plus_1, s, s_plus_1, t);
 
@@ -398,6 +410,12 @@ QuaternionSpline QuaternionSplineFitting::Interpolate(const Eigen::Array<Eigen::
         Eigen::Vector3d log_vec = log(q_i.inverse() * q_i_plus_1).vec() + log(q_i.inverse() * q_i_minus_1).vec();
         Eigen::Quaterniond s_i = q_i * exp(-1 * log_vec/4.0);
         support_pts(ii) = s_i;
+        // LOG(INFO) << std::fixed << std::setprecision(8) <<
+        //   " " << pts(ii).w() << " " << pts(ii).x() <<
+        //   " " << pts(ii).y() << " " << pts(ii).z() << "," <<
+        //   " " << support_pts(ii).w() << " " << support_pts(ii).x() <<
+        //   " " << support_pts(ii).y() << " " << support_pts(ii).z();
+
     }
 
     return QuaternionSpline(pts, support_pts);
@@ -417,6 +435,11 @@ void QuaternionSplineFitting::ChordLengths(const Eigen::Array<Eigen::Quaterniond
     for(size_t i = 0; i < (size_t)n-1 ; ++i){
         // get the angle between quaternions
         chord_lengths(i+1) = pts(i).dot(pts(i+1));
+        if (chord_lengths(i+1) < 0) {
+          LOG(INFO) << "Fixing negative chord length, " << i+1 << " " <<
+            chord_lengths(i+1);
+          chord_lengths(i+1) *= -1;
+        }
     }
 
     std::partial_sum(chord_lengths.data(), chord_lengths.data()+n, chord_lengths.data());

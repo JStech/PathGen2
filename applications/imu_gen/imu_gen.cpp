@@ -13,22 +13,27 @@ uint64_t readPoses(std::string filename,
   std::ifstream pose_file(filename, std::ios::in);
   uint64_t ts;
   uint64_t t_0;
-  Eigen::Vector4d q;
   Eigen::Vector3d t;
 
   pose_file >> t_0;
   pose_file.clear();
   pose_file.seekg(0);
+  const Eigen::Quaterniond neg1(-1, 0, 0, 0);
+  Eigen::Quaterniond q(1, 0, 0, 0);
+  Eigen::Quaterniond q_last(1, 0, 0, 0);
 
   while (pose_file >> ts
-      >> q[0] >> q[1] >> q[2] >> q[3]
+      >> q.coeffs()[3] >> q.coeffs()[0] >> q.coeffs()[1] >> q.coeffs()[2]
       >> t[0] >> t[1] >> t[2]) {
+    if (q.dot(q_last) < 0) {
+      q *= neg1;
+    }
     Eigen::Matrix4d T;
     T.topRightCorner(3, 1) = Eigen::Vector3d(t[0], t[1], t[2]);
-    T.topLeftCorner(3, 3) = Eigen::Quaterniond(q[0], q[1], q[2], q[3])
-      .toRotationMatrix();
+    T.topLeftCorner(3, 3) = q.toRotationMatrix();
     pathgen::PosePtr new_pose(new pathgen::Pose(T));
     poses->push_back(new_pose);
+    q_last = q;
   }
   pose_file.close();
   return ts - t_0;
@@ -71,7 +76,7 @@ int main(int argc, char* argv[]) {
   path_options.duration = 1e-9*duration;
 
   pathgen::PoseSpline pose_spline =
-    pathgen::PathGenerator::GenerateSplineFromPoses(poses);
+    pathgen::PathGenerator::GenerateSplineFromPoses(poses, false);
 
   pathgen::IMUGenerator::GenerateInertialMeasurements(pose_spline, imu_params,
       path_options, &imu_measurements, &imu_poses);

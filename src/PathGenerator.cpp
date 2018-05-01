@@ -80,10 +80,16 @@ PoseSpline PathGenerator::GenerateSplineFromPoses(std::vector<PosePtr> poses,
     // run a cubic spline through the position (for generating imu info)
     Eigen::ArrayXXd positions(3, poses.size());
     Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> rotations(poses.size());
+    Eigen::Quaterniond neg1(-1, 0, 0, 0);
     for(size_t ii = 0; ii < poses.size(); ++ii){
-        positions.col(ii) = poses.at(ii)->translation(); // translation (x, y, x)
-
-        rotations(ii) = poses.at(ii)->unit_quaternion(); // quaternion (i, j, k, w), eigen ordering
+        // translation (x, y, x)
+        positions.col(ii) = poses.at(ii)->translation();
+        // quaternion (i, j, k, w), eigen ordering
+        rotations(ii) = poses.at(ii)->unit_quaternion();
+        // ensure our interpolations go the short way around the great arc
+        if (ii > 0 && rotations(ii).dot(rotations(ii-1)) < 0) {
+          rotations(ii) *= neg1;
+        }
     }
 
     // do the quaternion interpolation
@@ -115,9 +121,13 @@ PoseSpline PathGenerator::GenerateSplineFromPoses(std::vector<PosePtr> poses,
         if(!integrate_gyro){
             Eigen::Quaterniond ref_quat = poses.at(i)->unit_quaternion();
             Eigen::Quaterniond spline_quat = quat_spline(quat_chord_lengths(i));
-            if( !(ref_quat.inverse()*spline_quat).isApprox(Eigen::Quaterniond::Identity()) ){
+            Eigen::Quaterniond check_quat = ref_quat.inverse()*spline_quat;
+            Eigen::Quaterniond neg1(-1, 0, 0, 0);
+            if( !check_quat.isApprox(Eigen::Quaterniond::Identity()) &&
+                !check_quat.isApprox(neg1)){
                 LOG(ERROR) << "Quaternion spline interpolation too far off: " <<
-                              (ref_quat.inverse()*spline_quat).coeffs().transpose();
+                  check_quat.w() << " " << check_quat.x() << " " <<
+                  check_quat.y() << " " << check_quat.z();
             }
         }
 
