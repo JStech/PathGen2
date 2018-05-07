@@ -12,7 +12,7 @@ uint64_t genPoses(std::vector<pathgen::PosePtr>* poses) {
     double theta = static_cast<double>(t-5) * M_PI / 30;
     T.topRightCorner(3, 1) = Eigen::Vector3d(
         sin(M_PI + theta), cos(M_PI + theta), 0);
-    q = Eigen::AngleAxisd(theta, Eigen::Vector3d::UnitX());
+    q = Eigen::AngleAxisd(-theta, Eigen::Vector3d::UnitZ());
     T.topLeftCorner(3, 3) = q.toRotationMatrix();
     pathgen::PosePtr new_pose(new pathgen::Pose(T));
     poses->push_back(new_pose);
@@ -53,9 +53,23 @@ int main(int argc, char* argv[]) {
   pathgen::IMUGenerator::GenerateInertialMeasurements(pose_spline, imu_params,
       path_options, &imu_measurements, &imu_poses);
 
-  // TODO test results somehow, rather than just printing them
-  pathgen::IMUGenerator::SaveMeasurementFiles(imu_measurements);
-  pathgen::SavePoses(imu_poses, "imu_poses.txt");
+  // ground truth acceleration and gyroscope calculation:
+  // pose is traveling in circle of radius 1, through arc of size pi/3, in 2
+  // seconds; rotational velocity is pi/6 rad/sec, centripetal acceleration is
+  // v^2/r = (pi/6)^2, gravity is 9.81
+  Eigen::Vector3d accel_gt(0, M_PI*M_PI/36., imu_params.g);
+  Eigen::Vector3d gyro_gt(0., 0., -M_PI/6.);
+  for (size_t t = 50; t < imu_measurements.size() - 50; t++) {
+    if ((accel_gt - imu_measurements[t].measurement.accelerometers).norm() >
+        1e-2) {
+      std::cout << "Test failed: " << t << " " <<
+        imu_measurements[t].measurement.accelerometers.transpose() << std::endl;
+    }
+    if ((gyro_gt - imu_measurements[t].measurement.gyroscopes).norm() > 1e-2) {
+      std::cout << "Test failed: " << t << " " <<
+        imu_measurements[t].measurement.gyroscopes.transpose() << std::endl;
+    }
+  }
 
   return 0;
 }
