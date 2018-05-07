@@ -35,7 +35,8 @@ public:
     Eigen::Quaterniond operator()(const double& u) const;
 
     Eigen::Vector3d derivative(const double& u) const;
-    Eigen::Quaterniond quaternionDerivative(const double& u) const;
+    Eigen::Quaterniond quaternionDerivative(const double& u,
+        Eigen::Quaterniond* = nullptr) const;
     void SetIntegrateDerivativeForOrientation(bool integrate);
 
 protected:

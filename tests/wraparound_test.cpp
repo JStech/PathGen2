@@ -4,26 +4,20 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#define TIME 500000000
-#define STEP  10000000
-
 uint64_t genPoses(std::vector<pathgen::PosePtr>* poses) {
   Eigen::Matrix4d T;
   Eigen::Quaterniond q(1, 0, 0, 0);
 
-  for (uint64_t ts = 0; ts < TIME; ts += STEP) {
-    double theta = static_cast<double>(ts)/static_cast<double>(TIME) * M_PI;
+  for (int32_t t = 0; t < 11; t++) {
+    double theta = static_cast<double>(t-5) * M_PI / 30;
     T.topRightCorner(3, 1) = Eigen::Vector3d(
-        sin(M_PI/2 + theta), cos(M_PI/2 + theta), 0);
-    q.w() = cos((M_PI/2 + theta)/2);
-    q.x() = 0;
-    q.y() = 0;
-    q.z() = sin((M_PI/2 + theta)/2);
+        sin(M_PI + theta), cos(M_PI + theta), 0);
+    q = Eigen::AngleAxisd(theta, Eigen::Vector3d::UnitX());
     T.topLeftCorner(3, 3) = q.toRotationMatrix();
     pathgen::PosePtr new_pose(new pathgen::Pose(T));
     poses->push_back(new_pose);
   }
-  return TIME;
+  return 2000000000;
 }
 
 int main(int argc, char* argv[]) {
@@ -47,7 +41,7 @@ int main(int argc, char* argv[]) {
 
   pathgen::ImuMeasurementDeque imu_measurements;
   pathgen::ImuPathOptions path_options;
-  path_options.add_noise_to_imu_measurements = true;
+  path_options.add_noise_to_imu_measurements = false;
   std::vector<pathgen::PosePtr> imu_poses;
   std::vector<pathgen::PosePtr> poses;
   uint64_t duration = genPoses(&poses);
