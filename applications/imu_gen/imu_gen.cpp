@@ -7,6 +7,7 @@
 
 DEFINE_string(poses, "", "Poses to generate");
 DEFINE_string(config_file, "", "Config yaml file with IMU parameters");
+DEFINE_bool(noise, true, "Add noise; Defaults to true, set false with --nonoise");
 
 uint64_t readPoses(std::string filename,
     std::vector<pathgen::PosePtr>* poses) {
@@ -41,9 +42,9 @@ uint64_t readPoses(std::string filename,
 
 int main(int argc, char* argv[]) {
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_stderrthreshold = 0;  // INFO: 0, WARNING: 1, ERROR: 2, FATAL: 3
   FLAGS_colorlogtostderr = 1;
+  google::ParseCommandLineFlags(&argc, &argv, true);
 
   if (FLAGS_config_file.empty() || FLAGS_poses.empty()) {
     LOG(FATAL) << "Need config_file and poses";
@@ -69,14 +70,14 @@ int main(int argc, char* argv[]) {
 
   pathgen::ImuMeasurementDeque imu_measurements;
   pathgen::ImuPathOptions path_options;
-  path_options.add_noise_to_imu_measurements = true;
+  path_options.add_noise_to_imu_measurements = FLAGS_noise;
   std::vector<pathgen::PosePtr> imu_poses;
   std::vector<pathgen::PosePtr> poses;
   uint64_t duration = readPoses(FLAGS_poses, &poses);
   path_options.duration = 1e-9*duration;
 
   pathgen::PoseSpline pose_spline =
-    pathgen::PathGenerator::GenerateSplineFromPoses(poses, false);
+    pathgen::PathGenerator::GenerateSplineFromPoses(poses, true);
 
   pathgen::IMUGenerator::GenerateInertialMeasurements(pose_spline, imu_params,
       path_options, &imu_measurements, &imu_poses);

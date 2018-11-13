@@ -1,4 +1,5 @@
 #include <pathgen/IMUGenerator.h>
+#include <random>
 
 using namespace pathgen;
 
@@ -16,6 +17,11 @@ void IMUGenerator::GenerateInertialMeasurements(
     const double DT = 1.0/double(imu_parameters.rate);
 
     double t0 = 0.0;
+
+    // set up random number generator
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    std::normal_distribution<> d{0, 1};
 
     for (size_t t = 0; t <= (size_t)NUM_MEASUREMENTS; ++t) {
 
@@ -37,10 +43,10 @@ void IMUGenerator::GenerateInertialMeasurements(
         // now rotate acceleration into the body frame (world to body frame)
         acc = q_wb.toRotationMatrix().inverse() * acc;
 
-        if(path_options.add_noise_to_imu_measurements){
-            // now add noise to imu accel measurements
-            acc += Eigen::Vector3d::Random() * imu_parameters.sigma_a_c /
-                    sqrt(DT);
+        if (path_options.add_noise_to_imu_measurements) {
+          // now add noise to imu accel measurements
+          Eigen::Vector3d r(d(gen), d(gen), d(gen));
+          acc += r * imu_parameters.sigma_a_c / sqrt(DT);
         }
 
         // get the current angular velocity
@@ -76,6 +82,8 @@ void IMUGenerator::SaveMeasurementFiles(const ImuMeasurementDeque& meas){
     std::ofstream imu_accel("accel.txt", std::ios_base::trunc);
     std::ofstream imu_gyro("gyro.txt", std::ios_base::trunc);
     std::ofstream imu_ts("timestamp.txt", std::ios_base::trunc);
+    imu_file << "# timestamp, acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z" <<
+      std::endl;
     for(const auto& m : meas){
         imu_file << static_cast<uint64_t>(1e9*m.timestamp) << ", " <<
           m.measurement.accelerometers[0] << "," <<

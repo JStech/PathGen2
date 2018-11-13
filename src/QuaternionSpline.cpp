@@ -84,15 +84,13 @@ namespace pathgen {
     return true;
   }
 
-  QuaternionSpline::QuaternionSpline(Eigen::Array<Eigen::Quaterniond, 1,
-      Eigen::Dynamic> ctrl,
-      Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> support) :
+  QuaternionSpline::QuaternionSpline(
+      Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> ctrl,
+      Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> support,
+      Eigen::VectorXd knots) :
     control_pts_(ctrl),
-    support_pts_(support) {
-    // build the chord lengths
-    QuaternionSplineFitting::ChordLengths(ctrl, knots_);
-  }
-
+    support_pts_(support),
+    knots_(knots) {}
 
   void QuaternionSpline::SetIntegrateDerivativeForOrientation(bool integrate) {
 
@@ -224,7 +222,8 @@ namespace pathgen {
 
   // inspired by eigen's spline interpolation class (static)
   QuaternionSpline QuaternionSplineFitting::Interpolate(
-      const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> pts) {
+      const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> pts,
+      const Eigen::VectorXd& knots) {
 
     Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> support_pts(pts.cols());
 
@@ -252,29 +251,7 @@ namespace pathgen {
       support_pts(ii) = s_i;
     }
 
-    return QuaternionSpline(pts, support_pts);
+    return QuaternionSpline(pts, support_pts, knots);
   }
 
-  // inspired by eigen's spline interpolation class
-  void QuaternionSplineFitting::ChordLengths(
-      const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic>& pts,
-      Eigen::VectorXd& chord_lengths) {
-    const int n = pts.cols();
-
-    chord_lengths.resize(pts.cols());
-    chord_lengths[0] = 0;
-
-    for (size_t i = 0; i < static_cast<size_t>(n-1); ++i) {
-      // get the angle between quaternions
-      chord_lengths(i+1) = pts(i).dot(pts(i+1));
-      if (chord_lengths(i+1) < 0) {
-        chord_lengths(i+1) *= -1;
-      }
-    }
-
-    std::partial_sum(chord_lengths.data(), chord_lengths.data()+n,
-        chord_lengths.data());
-
-    chord_lengths /= chord_lengths(n-1); // normalize
-  }
 } // namespace pathgen

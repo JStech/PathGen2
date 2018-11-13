@@ -93,12 +93,14 @@ PoseSpline PathGenerator::GenerateSplineFromPoses(std::vector<PosePtr> poses,
     }
 
     // do the quaternion interpolation
-    Eigen::VectorXd quat_chord_lengths;
-    quat_chord_lengths.setZero();
-    QuaternionSplineFitting::ChordLengths(rotations, quat_chord_lengths);
+    Eigen::VectorXd qknots;
+    qknots.resize(poses.size());
+    for (size_t i = 0; i < poses.size(); i++) {
+      qknots[i] = static_cast<double>(i)/static_cast<double>(poses.size()-1);
+    }
 
     QuaternionSpline quat_spline =
-            QuaternionSplineFitting::Interpolate(rotations);
+            QuaternionSplineFitting::Interpolate(rotations, qknots);
 
     // integrate derivative back so that curves are consistent
     quat_spline.SetIntegrateDerivativeForOrientation(integrate_gyro);
@@ -107,12 +109,13 @@ PoseSpline PathGenerator::GenerateSplineFromPoses(std::vector<PosePtr> poses,
     // And the position interpolation
     // gets the chord lengths corresponding to the points the spline passes through
     Eigen::Spline3d::ParameterVectorType knots;
-    Eigen::ChordLengths(positions, knots);
+    knots.resize(poses.size());
+    for (size_t i = 0; i < poses.size(); i++) {
+      knots[i] = static_cast<double>(i)/static_cast<double>(poses.size()-1);
+    }
 
-    // 4th order spline so we have smooth accelerations...not really necessary
     Eigen::Spline3d position_spline =
-            Eigen::SplineFitting<Eigen::Spline3d>::Interpolate(positions,
-                                                               4);
+            Eigen::SplineFitting<Eigen::Spline3d>::Interpolate(positions, 2, knots);
 
     // Check that the splines are going through the control points
     for(size_t i = 0; i < poses.size(); ++i)
@@ -120,7 +123,7 @@ PoseSpline PathGenerator::GenerateSplineFromPoses(std::vector<PosePtr> poses,
         // check that the quaternion interpolated correctly
         if(!integrate_gyro){
             Eigen::Quaterniond ref_quat = poses.at(i)->unit_quaternion();
-            Eigen::Quaterniond spline_quat = quat_spline(quat_chord_lengths(i));
+            Eigen::Quaterniond spline_quat = quat_spline(qknots(i));
             Eigen::Quaterniond check_quat = ref_quat.inverse()*spline_quat;
             Eigen::Quaterniond neg1(-1, 0, 0, 0);
             if( !check_quat.isApprox(Eigen::Quaterniond::Identity()) &&

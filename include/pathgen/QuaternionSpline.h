@@ -29,7 +29,8 @@ class QuaternionSpline
 public:
     QuaternionSpline(){}
     QuaternionSpline(Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> ctrl,
-                     Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> support);
+                     Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> support,
+                     Eigen::VectorXd knots);
 
     // the spline value at a given locaiton
     Eigen::Quaterniond operator()(const double& u) const;
@@ -50,12 +51,9 @@ protected:
 
 struct QuaternionSplineFitting
 {
-    static void ChordLengths(
-            const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic>& pts,
-            Eigen::VectorXd& chord_lengths);
-
     static QuaternionSpline Interpolate(
-            const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> pts);
+            const Eigen::Array<Eigen::Quaterniond, 1, Eigen::Dynamic> pts,
+            const Eigen::VectorXd& knots);
 
 };
 
