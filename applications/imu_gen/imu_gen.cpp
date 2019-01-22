@@ -52,7 +52,9 @@ int main(int argc, char* argv[]) {
 
   compass::ParameterReader param_reader(FLAGS_config_file);
   compass::CompassParameters params;
-  param_reader.GetParameters(params);
+  if (!param_reader.GetParameters(params)) {
+    LOG(FATAL) << "Can't read parameter file";
+  }
   pathgen::ImuParameters imu_params;
 
   imu_params.a_max = params.imu.a_max;

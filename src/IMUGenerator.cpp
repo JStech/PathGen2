@@ -22,6 +22,8 @@ void IMUGenerator::GenerateInertialMeasurements(
     std::random_device rd{};
     std::mt19937 gen{rd()};
     std::normal_distribution<> d{0, 1};
+    Eigen::Vector3d accel_bias = Eigen::Vector3d::Zero();
+    Eigen::Vector3d gyro_bias = Eigen::Vector3d::Zero();
 
     for (size_t t = 0; t <= (size_t)NUM_MEASUREMENTS; ++t) {
 
@@ -46,7 +48,9 @@ void IMUGenerator::GenerateInertialMeasurements(
         if (path_options.add_noise_to_imu_measurements) {
           // now add noise to imu accel measurements
           Eigen::Vector3d r(d(gen), d(gen), d(gen));
-          acc += r * imu_parameters.sigma_a_c / sqrt(DT);
+          accel_bias += r * imu_parameters.sigma_aw_c/sqrt(DT);
+          r << d(gen), d(gen), d(gen);
+          acc += accel_bias + r * imu_parameters.sigma_a_c/sqrt(DT);
         }
 
         // get the current angular velocity
@@ -63,8 +67,10 @@ void IMUGenerator::GenerateInertialMeasurements(
 
         if(path_options.add_noise_to_imu_measurements){
             // add noise to gyro measurements
-            gyro_body += Eigen::Vector3d::Random() * imu_parameters.sigma_g_c
-                    / sqrt(DT);
+            Eigen::Vector3d r(d(gen), d(gen), d(gen));
+            gyro_bias += r * imu_parameters.sigma_gw_c/sqrt(DT);
+            r << d(gen), d(gen), d(gen);
+            gyro_body += gyro_bias + r * imu_parameters.sigma_g_c/sqrt(DT);
         }
 
         imu_measurements->push_back(
