@@ -5,6 +5,7 @@
 #include <unsupported/Eigen/Splines>
 #include <unsupported/Eigen/AutoDiff>
 #include <sophus/se3.hpp>
+#include <memory>
 namespace pathgen
 {
 typedef Eigen::Spline3d::PointType PointType;

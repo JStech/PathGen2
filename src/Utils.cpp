@@ -2,10 +2,10 @@
 
 namespace pathgen{
 
-void SavePoses(const std::vector<PosePtr>& poses, const std::string filename){
+void SavePoses(std::vector<PosePtr>& poses, const std::string filename){
     std::ofstream poses_file(filename, std::ios_base::trunc);
 
-    for(std::vector<const PosePtr>::iterator it = poses.begin();
+    for(std::vector<PosePtr>::iterator it = poses.begin();
         it != poses.end(); ++it)
     {
         poses_file << (*it)->translation().transpose().format(pathgen::kLongCsvFmt)

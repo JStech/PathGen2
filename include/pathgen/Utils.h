@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 namespace pathgen {
 
@@ -116,7 +117,7 @@ inline Eigen::Quaterniond euler2quat(Eigen::Vector3d euler) // euler angles in r
     return Eigen::Quaterniond(coeffs[0], coeffs[1], coeffs[2], coeffs[3]);
 }
 
-void SavePoses(const std::vector<PosePtr>& poses, const std::string filename);
+void SavePoses(std::vector<PosePtr>& poses, const std::string filename);
 void SaveCameraPoses(const PoseSpline& pose_spline, const int camera_rate,
                      const int duration,
                      const double start_time = 0);
